@@ -1,5 +1,5 @@
 //
-//  Standing.swift
+//  TeamStanding.swift
 //  
 //
 //  Created by Doan Le Thieu on 27/02/2022.
@@ -7,7 +7,7 @@
 
 import Foundation
 
-public struct Standing: Equatable {
+public struct TeamStanding: Equatable {
     public let position: Int
     public let team: ShortTeam
     public let playedGames: Int

@@ -36,7 +36,7 @@ struct StandingResponse: Decodable {
     let lost: Int
     let points: Int
 
-    func toStanding() -> Standing {
+    func toStanding() -> TeamStanding {
         return .init(
             position: position,
             team: team.toShortTeam(),

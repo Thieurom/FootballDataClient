@@ -7,24 +7,51 @@
 
 import Foundation
 
-enum Resource {
-    case team(teamId: Int)
-    case standing(competitionId: Int)
+protocol ResourceType {
+    var path: String { get }
 }
 
-extension Resource {
-    var url: URL {
-        URL(string: Resource.basePath + path)!
-    }
+enum TeamResource: ResourceType {
+    case team(id: Int)
+    case matches(teamId: Int)
 
-    private static let basePath = "https://api.football-data.org/v2/"
+    static let basePath = "teams"
 
-    private var path: String {
+    var path: String {
         switch self {
-        case .team(let teamId):
-            return "teams/\(teamId)"
-        case .standing(let competitionId):
-            return "competitions/\(competitionId)/standings"
+        case .team(let id):
+            return "\(Self.basePath)/\(id)"
+        case .matches(teamId: let teamId):
+            return "\(Self.basePath)/\(teamId)/matches"
+        }
+    }
+}
+
+enum CompetitionResource: ResourceType {
+    case standing(competitionId: Int)
+    case matches(competitionId: Int)
+
+    static let basePath = "competitions"
+
+    var path: String {
+        switch self {
+        case .standing(competitionId: let competitionId):
+            return "\(Self.basePath)/\(competitionId)/standings"
+        case .matches(competitionId: let competitionId):
+            return "\(Self.basePath)/\(competitionId)/matches"
+        }
+    }
+}
+
+enum MatchResource: ResourceType {
+    case match(id: Int)
+
+    static let basePath = "matches"
+
+    var path: String {
+        switch self {
+        case .match(id: let id):
+            return "\(Self.basePath)/\(id)"
         }
     }
 }

@@ -11,12 +11,12 @@ public struct CompetitionStanding: Equatable {
     public let competitionId: Int
     public let competitionName: String
     public let season: Season
-    public let table: [Standing]
+    public let table: [TeamStanding]
 
     public init(competitionId: Int,
                 competitionName: String,
                 season: Season,
-                table: [Standing]) {
+                table: [TeamStanding]) {
         self.competitionId = competitionId
         self.competitionName = competitionName
         self.season = season
