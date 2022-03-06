@@ -14,8 +14,7 @@ struct CompetitionStandingResponse: Decodable {
 
     func toCompetitionStanding() -> CompetitionStanding {
         return .init(
-            competitionId: competition.id,
-            competitionName: competition.name,
+            competition: competition.toCompetition(),
             season: season.toSeason(),
             table: (standings.first?.table ?? [])
                 .map { $0.toStanding() }

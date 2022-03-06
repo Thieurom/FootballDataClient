@@ -32,6 +32,21 @@ public struct FootballDataClient {
     }
 }
 
+// MARK: - Fetch `Competition`
+
+extension FootballDataClient {
+    /// Fetch the competition from a given id
+    public func fetchCompetition(competitionId: Int) -> AnyPublisher<Competition, ApiError> {
+        let resource = CompetitionResource.competition(id: competitionId)
+        let url = makeUrl(for: resource)
+        let request = URLRequest(url: url)
+
+        return makeRequest(request, from: CompetitionResponse.self) {
+            $0.toCompetition()
+        }
+    }
+}
+
 // MARK: - Fetch `Team`
 
 extension FootballDataClient {
@@ -85,6 +100,33 @@ extension FootballDataClient {
         return makeRequest(request, from: CompetitionMatchesResponse.self) { response in
             response.matches.map { $0.toMatch(of: response.competition) }
         }
+        .flatMap { matches -> AnyPublisher<[Match], ApiError> in
+            guard let first = matches.first else {
+                return Just(matches)
+                    .setFailureType(to: ApiError.self)
+                    .eraseToAnyPublisher()
+            }
+
+            return fetchMatch(matchId: first.id)
+                .map { match in
+                    matches.map {
+                        Match(
+                            id: $0.id,
+                            competition: match.competition,
+                            season: $0.season,
+                            date: $0.date,
+                            matchDay: $0.matchDay,
+                            status: $0.status,
+                            lastUpdated: $0.lastUpdated,
+                            homeTeam: $0.homeTeam,
+                            awayTeam: $0.awayTeam,
+                            score: $0.score
+                        )
+                    }
+                }
+                .eraseToAnyPublisher()
+        }
+        .eraseToAnyPublisher()
     }
 
     /// Fetch matches of a specific team

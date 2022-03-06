@@ -28,6 +28,7 @@ enum TeamResource: ResourceType {
 }
 
 enum CompetitionResource: ResourceType {
+    case competition(id: Int)
     case standing(competitionId: Int)
     case matches(competitionId: Int)
 
@@ -35,6 +36,8 @@ enum CompetitionResource: ResourceType {
 
     var path: String {
         switch self {
+        case .competition(let id):
+            return "\(Self.basePath)/\(id)"
         case .standing(competitionId: let competitionId):
             return "\(Self.basePath)/\(competitionId)/standings"
         case .matches(competitionId: let competitionId):

@@ -20,11 +20,10 @@ public struct Match: Equatable {
     }
 
     public let id: Int
-    public let competitionId: Int
-    public let competitionName: String
+    public let competition: Competition
     public let season: Season
     public let date: Date
-    public let matchDay: Int
+    public let matchDay: MatchDay
     public let status: Status
     public let lastUpdated: Date
     public let homeTeam: ShortTeam

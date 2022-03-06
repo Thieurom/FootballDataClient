@@ -34,8 +34,7 @@ struct ACompetitionMatchResponse: Decodable {
     func toMatch(of competition: CompetitionResponse) -> Match {
         return .init(
             id: id,
-            competitionId: competition.id,
-            competitionName: competition.name,
+            competition: competition.toCompetition(),
             season: season.toSeason(),
             date: date,
             matchDay: matchDay,
@@ -75,8 +74,7 @@ struct ATeamMatchResponse: Decodable {
     func toMatch() -> Match {
         return .init(
             id: id,
-            competitionId: competition.id,
-            competitionName: competition.name,
+            competition: competition.toCompetition(),
             season: season.toSeason(),
             date: date,
             matchDay: matchDay,
@@ -91,8 +89,7 @@ struct ATeamMatchResponse: Decodable {
     func toMatch(head2head: Head2HeadResponse) -> Match {
         return .init(
             id: id,
-            competitionId: competition.id,
-            competitionName: competition.name,
+            competition: competition.toCompetition(),
             season: season.toSeason(),
             date: date,
             matchDay: matchDay,

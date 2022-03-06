@@ -9,5 +9,5 @@ import Foundation
 
 public struct Season: Equatable {
     public let id: Int
-//    public let currentMatchday: Int
+    public let currentMatchday: MatchDay?
 }
