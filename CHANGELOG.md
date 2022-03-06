@@ -1,8 +1,15 @@
 # Changelog
 
+## v0.3.0
+
+** Implement:**
+
+- Fetch competition
+- Modify fetching matches from a competition id so that we can access their competition's ensignUrls
+
 ## v0.2.0
 
-**Break**
+**Break**:
 
 - Rename `Standing` -> `TeamStanding`
 - Remove `currentMatchday` from `Season`
