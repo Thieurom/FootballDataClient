@@ -1,13 +1,14 @@
 //
 //  CompetitionStandingResponse.swift
-//  
+//  FootballDataClient
 //
 //  Created by Doan Le Thieu on 27/02/2022.
 //
 
-import Foundation
+import FootballDataClientType
 
 struct CompetitionStandingResponse: Decodable {
+
     let competition: CompetitionResponse
     let season: SeasonResponse
     let standings: [StandingTableResponse]
@@ -23,10 +24,12 @@ struct CompetitionStandingResponse: Decodable {
 }
 
 struct StandingTableResponse: Decodable {
+
     let table: [StandingResponse]
 }
 
 struct StandingResponse: Decodable {
+
     let position: Int
     let team: ShortTeamResponse
     let playedGames: Int

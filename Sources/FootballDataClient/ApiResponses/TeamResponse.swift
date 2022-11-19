@@ -1,13 +1,15 @@
 //
 //  TeamResponse.swift
-//  
+//  FootballDataClient
 //
 //  Created by Doan Le Thieu on 27/02/2022.
 //
 
+import FootballDataClientType
 import Foundation
 
 struct TeamResponse: Decodable {
+
     let id: Int
     let name: String
     let shortName: String
@@ -37,6 +39,7 @@ struct TeamResponse: Decodable {
 }
 
 struct ShortTeamResponse: Decodable {
+
     let id: Int
     let name: String
     let crestUrl: URL?

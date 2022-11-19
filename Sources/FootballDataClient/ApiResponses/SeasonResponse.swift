@@ -1,13 +1,14 @@
 //
 //  SeasonResponse.swift
-//  
+//  FootballDataClient
 //
 //  Created by Doan Le Thieu on 27/02/2022.
 //
 
-import Foundation
+import FootballDataClientType
 
 struct SeasonResponse: Decodable {
+
     let id: Int
     let currentMatchday: Int?
 

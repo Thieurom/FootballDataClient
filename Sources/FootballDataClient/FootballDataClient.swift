@@ -1,11 +1,12 @@
 //
 //  FootballDataClient.swift
-//
+//  FootballDataClient
 //
 //  Created by Doan Le Thieu on 27/02/2022.
 //
 
 import Combine
+import FootballDataClientType
 import Foundation
 
 public struct FootballDataClient {
@@ -36,7 +37,7 @@ public struct FootballDataClient {
 
 extension FootballDataClient {
     /// Fetch the competition from a given id
-    public func fetchCompetition(competitionId: Int) -> AnyPublisher<Competition, ApiError> {
+    public func fetchCompetition(competitionId: Int) -> AnyPublisher<Competition, FootballDataError> {
         let resource = CompetitionResource.competition(id: competitionId)
         let url = makeUrl(for: resource)
         let request = URLRequest(url: url)
@@ -51,7 +52,7 @@ extension FootballDataClient {
 
 extension FootballDataClient {
     /// Fetch the team from a given id
-    public func fetchTeam(teamId: Int) -> AnyPublisher<Team, ApiError> {
+    public func fetchTeam(teamId: Int) -> AnyPublisher<Team, FootballDataError> {
         let resource = TeamResource.team(id: teamId)
         let url = makeUrl(for: resource)
         let request = URLRequest(url: url)
@@ -66,7 +67,7 @@ extension FootballDataClient {
 
 extension FootballDataClient {
     /// Fetch competition standing from a given competition's id
-    public func fetchStanding(competitionId: Int) -> AnyPublisher<CompetitionStanding, ApiError> {
+    public func fetchStanding(competitionId: Int) -> AnyPublisher<CompetitionStanding, FootballDataError> {
         let resource = CompetitionResource.standing(competitionId: competitionId)
         let url = makeUrl(for: resource)
         let request = URLRequest(url: url)
@@ -81,7 +82,7 @@ extension FootballDataClient {
 
 extension FootballDataClient {
     /// Fetch the match from a given id
-    public func fetchMatch(matchId: Int) -> AnyPublisher<Match, ApiError> {
+    public func fetchMatch(matchId: Int) -> AnyPublisher<Match, FootballDataError> {
         let resource = MatchResource.match(id: matchId)
         let url = makeUrl(for: resource)
         let request = URLRequest(url: url)
@@ -92,7 +93,7 @@ extension FootballDataClient {
     }
 
     /// Fetch matches of a specific competition
-    public func fetchMatches(competitionId: Int) -> AnyPublisher<[Match], ApiError> {
+    public func fetchMatches(competitionId: Int) -> AnyPublisher<[Match], FootballDataError> {
         let resource = CompetitionResource.matches(competitionId: competitionId)
         let url = makeUrl(for: resource)
         let request = URLRequest(url: url)
@@ -100,10 +101,10 @@ extension FootballDataClient {
         return makeRequest(request, from: CompetitionMatchesResponse.self) { response in
             response.matches.map { $0.toMatch(of: response.competition) }
         }
-        .flatMap { matches -> AnyPublisher<[Match], ApiError> in
+        .flatMap { matches -> AnyPublisher<[Match], FootballDataError> in
             guard let first = matches.first else {
                 return Just(matches)
-                    .setFailureType(to: ApiError.self)
+                    .setFailureType(to: FootballDataError.self)
                     .eraseToAnyPublisher()
             }
 
@@ -130,7 +131,7 @@ extension FootballDataClient {
     }
 
     /// Fetch matches of a specific team
-    public func fetchMatches(teamId: Int) -> AnyPublisher<[Match], ApiError> {
+    public func fetchMatches(teamId: Int) -> AnyPublisher<[Match], FootballDataError> {
         let resource = TeamResource.matches(teamId: teamId)
         let url = makeUrl(for: resource)
         let request = URLRequest(url: url)
@@ -149,7 +150,7 @@ extension FootballDataClient {
         return URL(string: basePath + resource.path)!
     }
 
-    private func makeRequest<R: Decodable, M>(_ request: URLRequest, from type: R.Type, transform: @escaping (R) -> M) -> AnyPublisher<M, ApiError> {
+    private func makeRequest<R: Decodable, M>(_ request: URLRequest, from type: R.Type, transform: @escaping (R) -> M) -> AnyPublisher<M, FootballDataError> {
         var request = request
         request.setValue(apiToken, forHTTPHeaderField: "X-Auth-Token")
 
@@ -167,18 +168,18 @@ extension FootballDataClient {
             })
             .tryMap { data, response in
                 guard let httpResponse = response as? HTTPURLResponse else {
-                    throw ApiError.unknown
+                    throw FootballDataError.unknown
                 }
 
                 guard (200..<300) ~= httpResponse.statusCode else {
-                    throw ApiError.badRequest
+                    throw FootballDataError.badRequest
                 }
 
                 return data
             }
             .decode(type: R.self, decoder: Self.jsonDecoder)
             .map { transform($0) }
-            .mapError { error -> ApiError in
+            .mapError { error -> FootballDataError in
                 if error is DecodingError {
                     #if DEBUG
                     print("DecodingError: \(error)")
@@ -186,7 +187,7 @@ extension FootballDataClient {
                     return .badData
                 }
 
-                return (error as? ApiError) ?? .unknown
+                return (error as? FootballDataError) ?? .unknown
             }
             .eraseToAnyPublisher()
     }
