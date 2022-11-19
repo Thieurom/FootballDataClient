@@ -9,16 +9,26 @@ let package = Package(
     products: [
         .library(
             name: "FootballDataClient",
-            targets: ["FootballDataClient"]),
+            targets: ["FootballDataClient"]
+        ),
+        .library(
+            name: "FootballDataClientType",
+            targets: ["FootballDataClientType"]
+        )
     ],
-    dependencies: [
-    ],
+    dependencies: [],
     targets: [
         .target(
             name: "FootballDataClient",
-            dependencies: []),
+            dependencies: ["FootballDataClientType"]
+        ),
+        .target(
+            name: "FootballDataClientType",
+            dependencies: []
+        ),
         .testTarget(
             name: "FootballDataClientTests",
-            dependencies: ["FootballDataClient"]),
+            dependencies: ["FootballDataClient"]
+        )
     ]
 )

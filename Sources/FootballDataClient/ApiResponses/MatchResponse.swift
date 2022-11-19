@@ -1,20 +1,23 @@
 //
 //  MatchResponse.swift
-//  
+//  FootballDataClient
 //
 //  Created by Doan Le Thieu on 01/03/2022.
 //
 
+import FootballDataClientType
 import Foundation
 
 // MARK: - /competitions/{id}/matches
 
 struct CompetitionMatchesResponse: Decodable {
+
     let competition: CompetitionResponse
     let matches: [ACompetitionMatchResponse]
 }
 
 struct ACompetitionMatchResponse: Decodable {
+
     let id: Int
     let season: SeasonResponse
     let date: Date
@@ -50,10 +53,12 @@ struct ACompetitionMatchResponse: Decodable {
 // MARK: - /teams/{id}/matches
 
 struct TeamMatchesResponse: Decodable {
+
     let matches: [ATeamMatchResponse]
 }
 
 struct ATeamMatchResponse: Decodable {
+
     let id: Int
     let competition: CompetitionResponse
     let season: SeasonResponse
@@ -105,11 +110,13 @@ struct ATeamMatchResponse: Decodable {
 // MARK: - /matches/{id}
 
 struct MatchResponse: Decodable {
+
     let head2head: Head2HeadResponse
     let match: ATeamMatchResponse
 }
 
 struct Head2HeadResponse: Decodable {
+
     let homeTeam: ShortTeamResponse
     let awayTeam: ShortTeamResponse
 }
@@ -117,6 +124,7 @@ struct Head2HeadResponse: Decodable {
 // MARK: - Common
 
 struct MatchScoreResponse: Decodable {
+
     let halfTime: ScoreResponse
     let fullTime: ScoreResponse
     let extraTime: ScoreResponse
@@ -133,6 +141,7 @@ struct MatchScoreResponse: Decodable {
 }
 
 struct ScoreResponse: Decodable {
+
     let homeTeam: Int?
     let awayTeam: Int?
 

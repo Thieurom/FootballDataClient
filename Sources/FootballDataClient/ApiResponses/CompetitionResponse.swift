@@ -1,13 +1,15 @@
 //
 //  CompetitionResponse.swift
-//  
+//  FootballDataClient
 //
 //  Created by Doan Le Thieu on 27/02/2022.
 //
 
+import FootballDataClientType
 import Foundation
 
 struct CompetitionResponse: Decodable {
+
     let id: Int
     let name: String
     let area: AreaResponse?
@@ -24,5 +26,6 @@ struct CompetitionResponse: Decodable {
 }
 
 struct AreaResponse: Decodable {
+
     let ensignUrl: URL?
 }

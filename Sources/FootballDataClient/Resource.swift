@@ -1,6 +1,6 @@
 //
 //  Resource.swift
-//  
+//  FootballDataClient
 //
 //  Created by Doan Le Thieu on 27/02/2022.
 //
