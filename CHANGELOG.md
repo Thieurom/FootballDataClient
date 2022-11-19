@@ -1,8 +1,12 @@
 # Changelog
 
+## v0.4.0
+
+**Add interface for the client**
+
 ## v0.3.0
 
-** Implement:**
+**Implement:**
 
 - Fetch competition
 - Modify fetching matches from a competition id so that we can access their competition's ensignUrls
