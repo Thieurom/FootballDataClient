@@ -8,12 +8,13 @@
 import Combine
 import FootballDataClientType
 import Foundation
+import Pilot
+import PilotType
 
 public struct FootballDataClient {
-    private let apiToken: String
 
-    // Dependencies
-    private let urlSession = URLSession.shared
+    private let apiToken: String
+    private let network: Pilot<FootballDataRoute>
 
     private static let dateFormatter: DateFormatter = {
         let dateFormatter = DateFormatter()
@@ -27,168 +28,130 @@ public struct FootballDataClient {
         return jsonDecoder
     }()
 
-    /// Init the client with a token
-    public init(apiToken: String) {
+    /// Init the client with an API token and optionally-provided `URLSession`
+    public init(apiToken: String, urlSession: URLSession = .shared) {
+        self.network = Pilot<FootballDataRoute>(session: urlSession)
         self.apiToken = apiToken
     }
 }
 
-// MARK: - Fetch `Competition`
+extension FootballDataClient: FootballDataClientType {
 
-extension FootballDataClient {
     /// Fetch the competition from a given id
     public func fetchCompetition(competitionId: Int) -> AnyPublisher<Competition, FootballDataError> {
-        let resource = CompetitionResource.competition(id: competitionId)
-        let url = makeUrl(for: resource)
-        let request = URLRequest(url: url)
-
-        return makeRequest(request, from: CompetitionResponse.self) {
-            $0.toCompetition()
-        }
+        return network
+            .request(
+                .competition(competitionId).withAuthToken(apiToken),
+                target: CompetitionResponse.self,
+                decoder: Self.jsonDecoder
+            )
+            .map { $0.toCompetition() }
+            .mapError(\.asFootballDataError)
+            .eraseToAnyPublisher()
     }
-}
 
-// MARK: - Fetch `Team`
-
-extension FootballDataClient {
-    /// Fetch the team from a given id
-    public func fetchTeam(teamId: Int) -> AnyPublisher<Team, FootballDataError> {
-        let resource = TeamResource.team(id: teamId)
-        let url = makeUrl(for: resource)
-        let request = URLRequest(url: url)
-        
-        return makeRequest(request, from: TeamResponse.self) {
-            $0.toTeam()
-        }
-    }
-}
-
-// MARK: - Fetch `CompetitionStanding`
-
-extension FootballDataClient {
     /// Fetch competition standing from a given competition's id
     public func fetchStanding(competitionId: Int) -> AnyPublisher<CompetitionStanding, FootballDataError> {
-        let resource = CompetitionResource.standing(competitionId: competitionId)
-        let url = makeUrl(for: resource)
-        let request = URLRequest(url: url)
-
-        return makeRequest(request, from: CompetitionStandingResponse.self) {
-            $0.toCompetitionStanding()
-        }
+        return network
+            .request(
+                .standingOfCompetition(competitionId).withAuthToken(apiToken),
+                target: CompetitionStandingResponse.self,
+                decoder: Self.jsonDecoder
+            )
+            .map { $0.toCompetitionStanding() }
+            .mapError(\.asFootballDataError)
+            .eraseToAnyPublisher()
     }
-}
 
-// MARK: - Fetch `Match(es)`
+    /// Fetch the team from a given id
+    public func fetchTeam(teamId: Int) -> AnyPublisher<Team, FootballDataError> {
+        return network
+            .request(
+                .team(teamId).withAuthToken(apiToken),
+                target: TeamResponse.self,
+                decoder: Self.jsonDecoder
+            )
+            .map { $0.toTeam() }
+            .mapError(\.asFootballDataError)
+            .eraseToAnyPublisher()
+    }
 
-extension FootballDataClient {
     /// Fetch the match from a given id
     public func fetchMatch(matchId: Int) -> AnyPublisher<Match, FootballDataError> {
-        let resource = MatchResource.match(id: matchId)
-        let url = makeUrl(for: resource)
-        let request = URLRequest(url: url)
-
-        return makeRequest(request, from: MatchResponse.self) { response in
-            response.match.toMatch(head2head: response.head2head)
-        }
+        return network
+            .request(
+                .match(matchId).withAuthToken(apiToken),
+                target: MatchResponse.self,
+                decoder: Self.jsonDecoder
+            )
+            .map { $0.match.toMatch(head2head: $0.head2head) }
+            .mapError(\.asFootballDataError)
+            .eraseToAnyPublisher()
     }
 
     /// Fetch matches of a specific competition
     public func fetchMatches(competitionId: Int) -> AnyPublisher<[Match], FootballDataError> {
-        let resource = CompetitionResource.matches(competitionId: competitionId)
-        let url = makeUrl(for: resource)
-        let request = URLRequest(url: url)
+        return network
+            .request(
+                .matchesOfCompetition(competitionId).withAuthToken(apiToken),
+                target: CompetitionMatchesResponse.self,
+                decoder: Self.jsonDecoder
+            )
+            .map { response in response.matches.map { $0.toMatch(of: response.competition) } }
+            .mapError(\.asFootballDataError)
+            .flatMap { matches -> AnyPublisher<[Match], FootballDataError> in
+                guard let first = matches.first else {
+                    return Just(matches)
+                        .setFailureType(to: FootballDataError.self)
+                        .eraseToAnyPublisher()
+                }
 
-        return makeRequest(request, from: CompetitionMatchesResponse.self) { response in
-            response.matches.map { $0.toMatch(of: response.competition) }
-        }
-        .flatMap { matches -> AnyPublisher<[Match], FootballDataError> in
-            guard let first = matches.first else {
-                return Just(matches)
-                    .setFailureType(to: FootballDataError.self)
+                return fetchMatch(matchId: first.id)
+                    .map { match in
+                        matches.map {
+                            Match(
+                                id: $0.id,
+                                competition: match.competition,
+                                season: $0.season,
+                                date: $0.date,
+                                matchDay: $0.matchDay,
+                                status: $0.status,
+                                lastUpdated: $0.lastUpdated,
+                                homeTeam: $0.homeTeam,
+                                awayTeam: $0.awayTeam,
+                                score: $0.score
+                            )
+                        }
+                    }
                     .eraseToAnyPublisher()
             }
-
-            return fetchMatch(matchId: first.id)
-                .map { match in
-                    matches.map {
-                        Match(
-                            id: $0.id,
-                            competition: match.competition,
-                            season: $0.season,
-                            date: $0.date,
-                            matchDay: $0.matchDay,
-                            status: $0.status,
-                            lastUpdated: $0.lastUpdated,
-                            homeTeam: $0.homeTeam,
-                            awayTeam: $0.awayTeam,
-                            score: $0.score
-                        )
-                    }
-                }
-                .eraseToAnyPublisher()
-        }
-        .eraseToAnyPublisher()
+            .eraseToAnyPublisher()
     }
 
     /// Fetch matches of a specific team
     public func fetchMatches(teamId: Int) -> AnyPublisher<[Match], FootballDataError> {
-        let resource = TeamResource.matches(teamId: teamId)
-        let url = makeUrl(for: resource)
-        let request = URLRequest(url: url)
-
-        return makeRequest(request, from: TeamMatchesResponse.self) {
-            $0.matches.map { $0.toMatch() }
-        }
+        return network
+            .request(
+                .matchesOfTeam(teamId).withAuthToken(apiToken),
+                target: TeamMatchesResponse.self,
+                decoder: Self.jsonDecoder
+            )
+            .map { $0.matches.map { $0.toMatch() } }
+            .mapError(\.asFootballDataError)
+            .eraseToAnyPublisher()
     }
 }
 
-// MARK: - Internal
+extension PilotError {
 
-extension FootballDataClient {
-    private func makeUrl(for resource: ResourceType) -> URL {
-        let basePath = "https://api.football-data.org/v2/"
-        return URL(string: basePath + resource.path)!
-    }
-
-    private func makeRequest<R: Decodable, M>(_ request: URLRequest, from type: R.Type, transform: @escaping (R) -> M) -> AnyPublisher<M, FootballDataError> {
-        var request = request
-        request.setValue(apiToken, forHTTPHeaderField: "X-Auth-Token")
-
-        #if DEBUG
-        print("[API] Request: \(request)\n\(request.allHTTPHeaderFields ?? [:])")
-        #endif
-
-        return urlSession.dataTaskPublisher(for: request)
-            .handleEvents(receiveOutput: {
-                #if DEBUG
-                let statusCode = ($0.response as? HTTPURLResponse)?.statusCode
-                let codeString = statusCode != nil ? "\(statusCode!) " : ""
-                print("[API] Response: \(request)\n\(codeString)\(String(decoding: $0.data, as: UTF8.self))")
-                #endif
-            })
-            .tryMap { data, response in
-                guard let httpResponse = response as? HTTPURLResponse else {
-                    throw FootballDataError.unknown
-                }
-
-                guard (200..<300) ~= httpResponse.statusCode else {
-                    throw FootballDataError.badRequest
-                }
-
-                return data
-            }
-            .decode(type: R.self, decoder: Self.jsonDecoder)
-            .map { transform($0) }
-            .mapError { error -> FootballDataError in
-                if error is DecodingError {
-                    #if DEBUG
-                    print("DecodingError: \(error)")
-                    #endif
-                    return .badData
-                }
-
-                return (error as? FootballDataError) ?? .unknown
-            }
-            .eraseToAnyPublisher()
+    fileprivate var asFootballDataError: FootballDataError {
+        switch self {
+        case .decoding:
+            return .badData
+        case .designated:
+            return .unknown
+        case .underlying:
+            return .badRequest
+        }
     }
 }

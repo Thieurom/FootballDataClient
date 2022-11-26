@@ -16,11 +16,16 @@ let package = Package(
             targets: ["FootballDataClientType"]
         )
     ],
-    dependencies: [],
+    dependencies: [
+        .package(url: "https://github.com/Thieurom/Pilot", from: "0.4.0")
+    ],
     targets: [
         .target(
             name: "FootballDataClient",
-            dependencies: ["FootballDataClientType"]
+            dependencies: [
+                "FootballDataClientType",
+                .product(name: "Pilot", package: "Pilot")
+            ]
         ),
         .target(
             name: "FootballDataClientType",
@@ -28,7 +33,10 @@ let package = Package(
         ),
         .testTarget(
             name: "FootballDataClientTests",
-            dependencies: ["FootballDataClient"]
+            dependencies: [
+                "FootballDataClient",
+                .product(name: "PilotTestSupport", package: "Pilot")
+            ]
         )
     ]
 )
